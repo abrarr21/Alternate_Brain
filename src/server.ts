@@ -1,7 +1,10 @@
 import express from "express";
 import dotenv from "dotenv";
-import User from "./model/user.model";
 import connectDB from "./db/db";
+import router from "./routes/user.route";
+import { authMiddleware } from "./middlewares/authMiddleware";
+import cookieParser from "cookie-parser";
+import contentRouter from "./routes/content.route";
 
 dotenv.config();
 const PORT = process.env.PORT;
@@ -9,25 +12,14 @@ const PORT = process.env.PORT;
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (_req, res) => {
+app.use("/api/v1", router);
+app.use("/api/v1", contentRouter);
+
+app.get("/", authMiddleware, (_req, res) => {
   res.send("hello there!!!!");
-});
-
-app.post("/signup", async (req, res) => {
-  const { email, password } = req.body;
-
-  const newUser = new User({ email, password });
-  await newUser.save();
-
-  res.json({
-    message: "User created!!!",
-    userInfo: {
-      id: newUser._id,
-      email,
-      password,
-    },
-  });
 });
 
 app.listen(PORT, () => {
