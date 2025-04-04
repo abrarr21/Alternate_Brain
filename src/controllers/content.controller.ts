@@ -68,3 +68,37 @@ export const getContent = async (
     return;
   }
 };
+
+export const deleteContent = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = (req as AuthRequest).user?.id;
+    const contentId = req.params.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const content = await Content.findById(contentId);
+    if (!content) {
+      res.status(404).json({ error: "Content not found" });
+      return;
+    }
+
+    if (content.userId.toString() !== userId) {
+      res.status(403).json({ error: "FORBIDDEN: Not your Content" });
+      return;
+    }
+
+    await Content.findByIdAndDelete(contentId);
+    res.status(200).json({ message: "Content deleted successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Internal Server ERROR: content delete handler" });
+    return;
+  }
+};
